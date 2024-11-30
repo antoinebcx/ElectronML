@@ -1,0 +1,29 @@
+{
+    "name": "electron-ml",
+    "version": "1.0.0",
+    "main": "dist/electron/main.js",
+    "scripts": {
+      "start": "concurrently \"npm run start:react\" \"npm run start:electron\" \"npm run start:backend\"",
+      "start:react": "vite",
+      "start:electron": "tsc -p electron && electron .",
+      "start:backend": "cd backend && uvicorn main:app --reload",
+      "build": "tsc && vite build"
+    },
+    "dependencies": {
+      "@emotion/react": "^11.11.0",
+      "@emotion/styled": "^11.11.0",
+      "@mui/material": "^5.13.0",
+      "axios": "^1.4.0",
+      "electron": "^25.0.0",
+      "react": "^18.2.0",
+      "react-dom": "^18.2.0"
+    },
+    "devDependencies": {
+      "@types/react": "^18.2.0",
+      "@types/react-dom": "^18.2.0",
+      "@vitejs/plugin-react": "^4.0.0",
+      "concurrently": "^8.0.1",
+      "typescript": "^5.0.4",
+      "vite": "^4.3.9"
+    }
+  }
