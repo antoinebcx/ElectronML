@@ -103,11 +103,11 @@ const RegressionPlot: React.FC<RegressionPlotProps> = ({ actual, predicted }) =>
             <Typography variant="body2">Predicted:</Typography>
             <Typography variant="body2">{data.predicted.toFixed(3)}</Typography>
             <Typography variant="body2">Error:</Typography>
-            <Typography variant="body2" color={error > 0 ? 'error' : 'success'}>
+            <Typography variant="body2">
               {error > 0 ? '+' : ''}{error.toFixed(3)}
             </Typography>
             <Typography variant="body2">% Error:</Typography>
-            <Typography variant="body2" color={error > 0 ? 'error' : 'success'}>
+            <Typography variant="body2">
               {error > 0 ? '+' : ''}{percentError.toFixed(1)}%
             </Typography>
           </Box>
