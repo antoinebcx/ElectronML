@@ -5,6 +5,7 @@ node_modules/
 /backend/#
 /backend/explicitly
 /backend/using
+/backend/model.json
 __pycache__/
 *.py[cod]
 
