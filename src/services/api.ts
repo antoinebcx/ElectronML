@@ -9,28 +9,34 @@ export interface XGBoostConfig {
     max_depth: number;
     learning_rate: number;
     n_estimators: number;
-    objective?: string;  // Optional - can be derived from task_type
   };
 }
 
 export interface TrainingResult {
   status: string;
   metrics: {
-    train_accuracy?: number;    // for classification
-    test_accuracy?: number;     // for classification
-    train_rmse?: number;       // for regression
-    test_rmse?: number;        // for regression
-    n_classes?: number;        // for classification
+    train_accuracy?: number;
+    test_accuracy?: number;
+    train_rmse?: number;
+    test_rmse?: number;
+    n_classes?: number;
     n_features: number;
+    confusion_matrix?: number[][];
+    test_predictions?: {
+      actual: number[];
+      predicted: number[];
+    };
   };
   feature_importance: number[];
   feature_names: string[];
+  class_mapping?: Record<number, string>;
   artifacts: {
     model: {
       data: string; // base64 encoded
       format: string;
     };
     typescript_code: string;
+    preprocessing_metadata: string;
   };
 }
 

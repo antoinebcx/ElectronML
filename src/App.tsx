@@ -4,7 +4,7 @@ import { Box } from '@mui/material';
 import { TrainingForm } from './components/TrainingForm';
 import { ModelTester } from './components/ModelTester';
 import { useState } from 'react';
-import { TrainingResult } from './services/api';
+import { TrainingResult, TaskType } from './services/api';
 
 const theme = createTheme({
   palette: {
@@ -14,19 +14,28 @@ const theme = createTheme({
 
 export default function App() {
   const [trainingResult, setTrainingResult] = useState<TrainingResult | null>(null);
+  const [taskType, setTaskType] = useState<TaskType>('binary_classification');
+
+  const handleTrainingComplete = (result: TrainingResult, type: TaskType) => {
+    setTrainingResult(result);
+    setTaskType(type);
+  };
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
-        <TrainingForm onTrainingComplete={setTrainingResult} />
+        <TrainingForm 
+          onTrainingComplete={(result, type) => handleTrainingComplete(result, type)} 
+        />
         {trainingResult && (
-          <ModelTester 
+          <ModelTester
             modelData={trainingResult.artifacts.model.data}
+            preprocessingMetadata={trainingResult.artifacts.preprocessing_metadata}
             featureNames={trainingResult.feature_names}
-            // These would come from your training result
-            categoricalFeatures={trainingResult.artifacts.categorical_features}
-            classMapping={trainingResult.artifacts.class_mapping}
+            classMapping={trainingResult.class_mapping}
+            isRegression={taskType === 'regression'}
+            onError={(error) => console.error(error)}
           />
         )}
       </Box>

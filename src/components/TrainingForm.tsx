@@ -1,9 +1,21 @@
 import React, { useState } from 'react';
-import { Box, Button, TextField, Card, Typography, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
-import { mlApi, TrainingResult, TaskType } from '../services/api';
+import { 
+  Box, 
+  Button, 
+  TextField, 
+  Card, 
+  Typography, 
+  Select, 
+  MenuItem, 
+  FormControl, 
+  InputLabel 
+} from '@mui/material';
+import { mlApi, TrainingResult, TaskType, XGBoostConfig } from '../services/api';
+import ConfusionMatrix from './ConfusionMatrix';
+import RegressionPlot from './RegressionPlot'
 
 interface TrainingFormProps {
-  onTrainingComplete?: (result: TrainingResult) => void;
+  onTrainingComplete?: (result: TrainingResult, taskType: TaskType) => void;
 }
 
 export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
@@ -21,7 +33,7 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
     const formData = new FormData();
     formData.append('file', file);
 
-    const config = {
+    const config: XGBoostConfig = {
       target_column: targetColumn,
       task_type: taskType,
       parameters: {
@@ -34,7 +46,7 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
     try {
       const result = await mlApi.trainModel(formData, config);
       setResult(result);
-      onTrainingComplete?.(result);
+      onTrainingComplete?.(result, taskType);
     } catch (error) {
       console.error('Training failed:', error);
     } finally {
@@ -53,23 +65,6 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
     const a = document.createElement('a');
     a.href = url;
     a.download = 'model.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const downloadTypeScript = () => {
-    if (!result?.artifacts.typescript_code) return;
-    
-    const blob = new Blob(
-      [result.artifacts.typescript_code], 
-      { type: 'text/typescript' }
-    );
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'predictor.ts';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -120,7 +115,7 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
           </Button>
         </Card>
       </form>
-
+          
       {result && (
         <Card sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom>Results</Typography>
@@ -133,6 +128,14 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
               <Typography>
                 Test Accuracy: {(result.metrics.test_accuracy! * 100).toFixed(2)}%
               </Typography>
+              
+              {/* Confusion Matrix */}
+              {result.metrics.confusion_matrix && (
+                <ConfusionMatrix 
+                  matrix={result.metrics.confusion_matrix}
+                  classMapping={result.class_mapping}
+                />
+              )}
             </>
           ) : (
             <>
@@ -142,6 +145,14 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
               <Typography>
                 Test RMSE: {result.metrics.test_rmse?.toFixed(4)}
               </Typography>
+
+              {/* Regression Plot */}
+              {result.metrics.test_predictions && (
+                <RegressionPlot
+                  actual={result.metrics.test_predictions.actual}
+                  predicted={result.metrics.test_predictions.predicted}
+                />
+              )}
             </>
           )}
           
@@ -154,20 +165,12 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
             </Typography>
           ))}
 
-          <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+          <Box sx={{ mt: 3 }}>
             <Button 
               variant="contained" 
-              color="primary"
               onClick={downloadModel}
             >
               Download Model
-            </Button>
-            <Button 
-              variant="contained" 
-              color="secondary"
-              onClick={downloadTypeScript}
-            >
-              Download TypeScript Code
             </Button>
           </Box>
         </Card>
