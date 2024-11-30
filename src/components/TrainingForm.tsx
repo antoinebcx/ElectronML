@@ -13,6 +13,7 @@ import {
 import { mlApi, TrainingResult, TaskType, XGBoostConfig } from '../services/api';
 import ConfusionMatrix from './ConfusionMatrix';
 import RegressionPlot from './RegressionPlot'
+import { FileUpload } from './FileUpload';
 
 interface TrainingFormProps {
   onTrainingComplete?: (result: TrainingResult, taskType: TaskType) => void;
@@ -75,14 +76,13 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
     <Box sx={{ p: 3 }}>
       <form onSubmit={handleSubmit}>
         <Card sx={{ p: 2, mb: 2 }}>
-          <Typography variant="h6" gutterBottom>Train Model</Typography>
+          <Typography variant="h6" gutterBottom>Train model</Typography>
           
           <Box sx={{ mb: 2 }}>
-            <input
-              type="file"
-              accept=".csv"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-            />
+          <FileUpload
+            onFileChange={setFile}
+            currentFile={file}
+          />
           </Box>
 
           <FormControl fullWidth sx={{ mb: 2 }}>
@@ -165,7 +165,7 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
             </Typography>
           ))}
 
-          <Box sx={{ mt: 3 }}>
+          <Box sx={{ mt: 2 }}>
             <Button 
               variant="contained" 
               onClick={downloadModel}

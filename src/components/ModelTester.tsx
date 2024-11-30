@@ -246,10 +246,10 @@ export const ModelTester: React.FC<ModelTesterProps> = ({
   };
 
   return (
-    <Card sx={{ p: 3, margin: '0px 23px 0px 23px' }}>
+    <Card sx={{ p: 2, margin: '0px 23px 0px 23px' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6" color="primary">
-          Model Testing Interface
+        <Typography variant="h6">
+          Test model
         </Typography>
         <Tooltip title="Reset form">
           <IconButton 
@@ -262,7 +262,7 @@ export const ModelTester: React.FC<ModelTesterProps> = ({
         </Tooltip>
       </Box>
 
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 1 }}>
         {featureNames.map(feature => renderInputField(feature))}
       </Box>
 
@@ -270,7 +270,7 @@ export const ModelTester: React.FC<ModelTesterProps> = ({
         variant="contained" 
         onClick={handlePredict}
         disabled={isLoading || featureNames.some(f => !inputValues[f]?.trim())}
-        sx={{ mb: 2, minWidth: 150 }}
+        sx={{ minWidth: 150 }}
       >
         {isLoading ? (
           <>

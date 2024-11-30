@@ -33,7 +33,7 @@ const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ matrix, classMapping 
   };
 
   return (
-    <Card sx={{ p: 3, bgcolor: 'background.paper' }}>
+    <Card sx={{ p: 3, bgcolor: 'background.paper', mt: 3 }}>
       {/* Main container with constrained width */}
       <Box sx={{ 
         maxWidth: '100%',
