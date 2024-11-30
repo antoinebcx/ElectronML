@@ -1,6 +1,10 @@
 # Dependencies
 node_modules/
 /backend/venv/
+/backend/python3
+/backend/#
+/backend/explicitly
+/backend/using
 __pycache__/
 *.py[cod]
 

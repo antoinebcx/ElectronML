@@ -1,30 +1,18 @@
-import React from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Box, AppBar, Toolbar, Typography } from '@mui/material';
+import { TrainingForm } from './components/TrainingForm';
 
 const theme = createTheme({
   palette: {
-    mode: 'dark',
-  },
+    mode: 'dark'
+  }
 });
 
-function App() {
+export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ flexGrow: 1 }}>
-        <AppBar position="static">
-          <Toolbar>
-            <Typography variant="h6">
-              ML Training Platform
-            </Typography>
-          </Toolbar>
-        </AppBar>
-        {/* Add your components here */}
-      </Box>
+      <TrainingForm />
     </ThemeProvider>
   );
 }
-
-export default App;

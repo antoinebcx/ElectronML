@@ -7,17 +7,27 @@ function createWindow() {
     height: 800,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+      contextIsolation: false
     }
   });
 
-  // In development, load from Vite dev server
-  if (process.env.NODE_ENV === 'development') {
-    win.loadURL('http://localhost:5173');
-  } else {
-    win.loadFile(path.join(__dirname, '../dist/index.html'));
-  }
+  // In development mode, load from Vite dev server
+  win.loadURL('http://localhost:5173');
+
+  // Optional: Open DevTools
+  // win.webContents.openDevTools();
 }
 
 app.whenReady().then(createWindow);
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
+});
