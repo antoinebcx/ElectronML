@@ -12,11 +12,14 @@
     "dependencies": {
         "@emotion/react": "^11.13.5",
         "@emotion/styled": "^11.13.5",
+        "@mui/icons-material": "^5.16.8",
         "@mui/material": "^5.16.8",
         "axios": "^1.7.8",
         "electron": "^25.0.0",
         "react": "^18.2.0",
-        "react-dom": "^18.2.0"
+        "react-dom": "^18.2.0",
+        "react-dropzone": "^14.3.5",
+        "recharts": "^2.13.3"
     },
     "devDependencies": {
         "@types/react": "^18.2.0",

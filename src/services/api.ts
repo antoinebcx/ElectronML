@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+export type TaskType = 'binary_classification' | 'multiclass_classification' | 'regression';
+
 export interface XGBoostConfig {
   target_column: string;
+  task_type: TaskType;
   parameters: {
     max_depth: number;
     learning_rate: number;
@@ -12,19 +15,28 @@ export interface XGBoostConfig {
 export interface TrainingResult {
   status: string;
   metrics: {
-    train_accuracy: number;
-    test_accuracy: number;
-    n_classes: number;
+    train_accuracy?: number;
+    test_accuracy?: number;
+    train_rmse?: number;
+    test_rmse?: number;
+    n_classes?: number;
     n_features: number;
+    confusion_matrix?: number[][];
+    test_predictions?: {
+      actual: number[];
+      predicted: number[];
+    };
   };
   feature_importance: number[];
   feature_names: string[];
+  class_mapping?: Record<number, string>;
   artifacts: {
     model: {
-      data: string;  // base64 encoded
+      data: string; // base64 encoded
       format: string;
     };
     typescript_code: string;
+    preprocessing_metadata: string;
   };
 }
 

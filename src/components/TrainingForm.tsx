@@ -1,14 +1,28 @@
 import React, { useState } from 'react';
-import { Box, Button, TextField, Card, Typography } from '@mui/material';
-import { mlApi, TrainingResult } from '../services/api';
+import { 
+  Box, 
+  Button, 
+  TextField, 
+  Card, 
+  Typography, 
+  Select, 
+  MenuItem, 
+  FormControl, 
+  InputLabel 
+} from '@mui/material';
+import { mlApi, TrainingResult, TaskType, XGBoostConfig } from '../services/api';
+import ConfusionMatrix from './ConfusionMatrix';
+import RegressionPlot from './RegressionPlot'
+import { FileUpload } from './FileUpload';
 
 interface TrainingFormProps {
-  onTrainingComplete?: (result: TrainingResult) => void;
+  onTrainingComplete?: (result: TrainingResult, taskType: TaskType) => void;
 }
 
 export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [targetColumn, setTargetColumn] = useState('');
+  const [taskType, setTaskType] = useState<TaskType>('binary_classification');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TrainingResult | null>(null);
 
@@ -20,8 +34,9 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
     const formData = new FormData();
     formData.append('file', file);
 
-    const config = {
+    const config: XGBoostConfig = {
       target_column: targetColumn,
+      task_type: taskType,
       parameters: {
         max_depth: 3,
         learning_rate: 0.1,
@@ -32,7 +47,7 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
     try {
       const result = await mlApi.trainModel(formData, config);
       setResult(result);
-      onTrainingComplete?.(result);
+      onTrainingComplete?.(result, taskType);
     } catch (error) {
       console.error('Training failed:', error);
     } finally {
@@ -57,35 +72,32 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
     URL.revokeObjectURL(url);
   };
 
-  const downloadTypeScript = () => {
-    if (!result?.artifacts.typescript_code) return;
-    
-    const blob = new Blob(
-      [result.artifacts.typescript_code], 
-      { type: 'text/typescript' }
-    );
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'predictor.ts';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
   return (
     <Box sx={{ p: 3 }}>
       <form onSubmit={handleSubmit}>
         <Card sx={{ p: 2, mb: 2 }}>
-          <Typography variant="h6" gutterBottom>Train Model</Typography>
+          <Typography variant="h6" gutterBottom>Train model</Typography>
+          
           <Box sx={{ mb: 2 }}>
-            <input
-              type="file"
-              accept=".csv"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-            />
+          <FileUpload
+            onFileChange={setFile}
+            currentFile={file}
+          />
           </Box>
+
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel>Task Type</InputLabel>
+            <Select
+              value={taskType}
+              onChange={(e) => setTaskType(e.target.value as TaskType)}
+              label="Task Type"
+            >
+              <MenuItem value="binary_classification">Binary Classification</MenuItem>
+              <MenuItem value="multiclass_classification">Multiclass Classification</MenuItem>
+              <MenuItem value="regression">Regression</MenuItem>
+            </Select>
+          </FormControl>
+
           <TextField
             label="Target Column"
             value={targetColumn}
@@ -93,6 +105,7 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
             fullWidth
             sx={{ mb: 2 }}
           />
+
           <Button
             type="submit"
             variant="contained"
@@ -102,16 +115,46 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
           </Button>
         </Card>
       </form>
-
+          
       {result && (
         <Card sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom>Results</Typography>
-          <Typography>
-            Train Accuracy: {(result.metrics.train_accuracy * 100).toFixed(2)}%
-          </Typography>
-          <Typography>
-            Test Accuracy: {(result.metrics.test_accuracy * 100).toFixed(2)}%
-          </Typography>
+          
+          {taskType.includes('classification') ? (
+            <>
+              <Typography>
+                Train Accuracy: {(result.metrics.train_accuracy! * 100).toFixed(2)}%
+              </Typography>
+              <Typography>
+                Test Accuracy: {(result.metrics.test_accuracy! * 100).toFixed(2)}%
+              </Typography>
+              
+              {/* Confusion Matrix */}
+              {result.metrics.confusion_matrix && (
+                <ConfusionMatrix 
+                  matrix={result.metrics.confusion_matrix}
+                  classMapping={result.class_mapping}
+                />
+              )}
+            </>
+          ) : (
+            <>
+              <Typography>
+                Train RMSE: {result.metrics.train_rmse?.toFixed(4)}
+              </Typography>
+              <Typography>
+                Test RMSE: {result.metrics.test_rmse?.toFixed(4)}
+              </Typography>
+
+              {/* Regression Plot */}
+              {result.metrics.test_predictions && (
+                <RegressionPlot
+                  actual={result.metrics.test_predictions.actual}
+                  predicted={result.metrics.test_predictions.predicted}
+                />
+              )}
+            </>
+          )}
           
           <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
             Feature Importance
@@ -122,20 +165,12 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
             </Typography>
           ))}
 
-          <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+          <Box sx={{ mt: 2 }}>
             <Button 
               variant="contained" 
-              color="primary"
               onClick={downloadModel}
             >
               Download Model
-            </Button>
-            <Button 
-              variant="contained" 
-              color="secondary"
-              onClick={downloadTypeScript}
-            >
-              Download TypeScript Code
             </Button>
           </Box>
         </Card>

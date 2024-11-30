@@ -1,33 +1,77 @@
-import React, { useState, useCallback } from 'react';
-import { Box, Card, TextField, Button, Typography, Alert, CircularProgress } from '@mui/material';
+import React, { useState, useCallback, useMemo } from 'react';
+import { 
+  Box, 
+  Card, 
+  TextField, 
+  Button, 
+  Typography, 
+  Alert, 
+  CircularProgress,
+  Tooltip,
+  IconButton,
+  Collapse,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
+} from '@mui/material';
+import { Info as InfoIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 import { XGBoostPredictor } from './XGBoostPredictor';
+import { DataPreprocessor } from './DataPreprocessor';
 
 interface ModelTesterProps {
   modelData: string; // base64 encoded model
+  preprocessingMetadata: string;
   featureNames: string[];
-  categoricalFeatures?: Record<string, Record<string, number>>;
   classMapping?: Record<number, string>;
+  isRegression?: boolean;
   onError?: (error: string) => void;
 }
 
 interface PredictionResult {
-  class: number | string;
-  probabilities: number[];
+  predictedValue: number | string;
+  probabilities?: number[];
+  transformedFeatures: number[];
 }
 
 export const ModelTester: React.FC<ModelTesterProps> = ({ 
   modelData, 
-  featureNames, 
-  categoricalFeatures = {}, 
+  preprocessingMetadata,
+  featureNames,
   classMapping,
+  isRegression = false,
   onError
-}: ModelTesterProps) => {
+}) => {
+  // State management
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showFeatures, setShowFeatures] = useState(false);
 
-  // Memoized predictor instance
+  // Initialize preprocessor and get feature info
+  const preprocessor = useMemo(() => {
+    try {
+      return new DataPreprocessor(preprocessingMetadata);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to initialize preprocessor';
+      setError(errorMessage);
+      onError?.(errorMessage);
+      return null;
+    }
+  }, [preprocessingMetadata, onError]);
+
+  const featureInfo = useMemo(() => {
+    return preprocessor?.getFeatureInfo() ?? {
+      categoricalFeatures: {},
+      numericFeatures: []
+    };
+  }, [preprocessor]);
+
+  // Initialize predictor
   const getPredictor = useCallback(() => {
     try {
       const modelJson = atob(modelData);
@@ -36,35 +80,6 @@ export const ModelTester: React.FC<ModelTesterProps> = ({
       throw new Error('Failed to initialize model: Invalid model data');
     }
   }, [modelData]);
-
-  const validateInput = useCallback((feature: string, value: string): number => {
-    if (!value.trim()) {
-      throw new Error(`Please provide a value for ${feature}`);
-    }
-
-    // Handle categorical features
-    if (feature in categoricalFeatures) {
-      const mapping = categoricalFeatures[feature];
-      const categoryValue = mapping[value];
-      
-      if (categoryValue === undefined) {
-        const validValues = Object.keys(mapping).join(', ');
-        throw new Error(
-          `Invalid category "${value}" for feature "${feature}". ` +
-          `Valid values are: ${validValues}`
-        );
-      }
-      
-      return categoryValue;
-    }
-
-    // Handle numerical features
-    const numValue = parseFloat(value);
-    if (isNaN(numValue)) {
-      throw new Error(`Invalid numerical value for ${feature}`);
-    }
-    return numValue;
-  }, [categoricalFeatures]);
 
   const handleInputChange = useCallback((feature: string, value: string) => {
     setInputValues(prev => ({
@@ -75,27 +90,44 @@ export const ModelTester: React.FC<ModelTesterProps> = ({
     setError(null);
   }, []);
 
+  const resetForm = useCallback(() => {
+    setInputValues({});
+    setPrediction(null);
+    setError(null);
+  }, []);
+
   const handlePredict = async () => {
     setIsLoading(true);
     setError(null);
     setPrediction(null);
 
     try {
-      const predictor = getPredictor();
+      if (!preprocessor) {
+        throw new Error('Preprocessor not initialized');
+      }
+
+      // Transform features using preprocessor
+      const transformedFeatures = preprocessor.transform(inputValues);
       
-      // Convert and validate all inputs
-      const features = featureNames.map(feature => 
-        validateInput(feature, inputValues[feature] || '')
-      );
+      // Get predictor instance
+      const predictor = getPredictor();
 
       // Make prediction
-      const predictedClass = predictor.predict(features);
-      const probabilities = predictor.predict_proba(features);
+      let predictedValue: number | string;
+      let probabilities: number[] | undefined;
 
-      // Format prediction result
+      if (isRegression) {
+        predictedValue = predictor.predict(transformedFeatures);
+      } else {
+        const predictedClass = predictor.predict(transformedFeatures);
+        predictedValue = classMapping ? classMapping[predictedClass] : predictedClass;
+        probabilities = predictor.predict_proba(transformedFeatures);
+      }
+
       setPrediction({
-        class: classMapping ? classMapping[predictedClass] : predictedClass,
-        probabilities
+        predictedValue,
+        probabilities,
+        transformedFeatures
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
@@ -106,66 +138,139 @@ export const ModelTester: React.FC<ModelTesterProps> = ({
     }
   };
 
-  const renderPredictionResults = () => {
-    if (!prediction) return null;
-
+  const renderInputField = (feature: string) => {
+    const isCategorical = feature in featureInfo.categoricalFeatures;
+    const categories = isCategorical ? featureInfo.categoricalFeatures[feature] : [];
+    
     return (
-      <Box sx={{ mt: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Prediction Result
-        </Typography>
-        <Typography variant="subtitle1" color="primary" gutterBottom>
-          Predicted Class: {prediction.class}
-        </Typography>
-        
-        <Typography variant="subtitle2" gutterBottom sx={{ mt: 1 }}>
-          Class Probabilities:
-        </Typography>
-        <Box sx={{ pl: 2 }}>
-          {prediction.probabilities.map((prob, idx) => (
-            <Typography key={idx} color="text.secondary">
-              {classMapping ? classMapping[idx] : `Class ${idx}`}: 
-              <Box component="span" sx={{ ml: 1, fontWeight: 'bold' }}>
-                {(prob * 100).toFixed(2)}%
-              </Box>
-            </Typography>
-          ))}
-        </Box>
+      <Box key={feature} sx={{ mb: 2 }}>
+        <TextField
+          label={feature}
+          value={inputValues[feature] || ''}
+          onChange={(e) => handleInputChange(feature, e.target.value)}
+          error={Boolean(error && !inputValues[feature]?.trim())}
+          helperText={isCategorical ? `Valid categories: ${categories.join(', ')}` : 'Enter numeric value'}
+          disabled={isLoading}
+          fullWidth
+          size="small"
+        />
       </Box>
     );
   };
 
-  return (
-    <Card sx={{ p: 3, mt: 3 }}>
-      <Typography variant="h6" gutterBottom color="primary">
-        Model Testing Interface
-      </Typography>
+  const renderPredictionResults = () => {
+    if (!prediction) return null;
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
-        {featureNames.map(feature => (
-          <TextField
-            key={feature}
-            label={feature}
-            value={inputValues[feature] || ''}
-            onChange={(e) => handleInputChange(feature, e.target.value)}
-            helperText={
-              feature in categoricalFeatures 
-                ? `Categories: ${Object.keys(categoricalFeatures[feature]).join(', ')}`
-                : 'Enter numeric value'
-            }
-            error={Boolean(error && !inputValues[feature]?.trim())}
-            disabled={isLoading}
-            fullWidth
+    return (
+      <Card sx={{ mt: 3, p: 2 }}>
+        <Typography variant="h6" gutterBottom color="primary">
+          Prediction Results
+        </Typography>
+
+        <Typography variant="subtitle1" sx={{ mb: 2 }}>
+          {isRegression ? 'Predicted Value' : 'Predicted Class'}:{' '}
+          <Box component="span" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+            {typeof prediction.predictedValue === 'number' 
+              ? prediction.predictedValue.toFixed(4)
+              : prediction.predictedValue}
+          </Box>
+        </Typography>
+
+        {!isRegression && prediction.probabilities && (
+          <>
+            <Typography variant="subtitle2" gutterBottom>
+              Class Probabilities:
+            </Typography>
+            <TableContainer component={Paper} sx={{ mb: 2 }}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Class</TableCell>
+                    <TableCell align="right">Probability</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {prediction.probabilities.map((prob, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell>
+                        {classMapping ? classMapping[idx] : `Class ${idx}`}
+                      </TableCell>
+                      <TableCell align="right">
+                        {(prob * 100).toFixed(2)}%
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </>
+        )}
+
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+          <Typography variant="subtitle2">
+            Transformed Features
+          </Typography>
+          <IconButton 
+            size="small" 
+            onClick={() => setShowFeatures(!showFeatures)}
+            sx={{ ml: 1 }}
+          >
+            <InfoIcon fontSize="small" />
+          </IconButton>
+        </Box>
+
+        <Collapse in={showFeatures}>
+          <TableContainer component={Paper}>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Feature</TableCell>
+                  <TableCell align="right">Transformed Value</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {featureNames.map((feature, idx) => (
+                  <TableRow key={feature}>
+                    <TableCell>{feature}</TableCell>
+                    <TableCell align="right">
+                      {prediction.transformedFeatures[idx].toFixed(4)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Collapse>
+      </Card>
+    );
+  };
+
+  return (
+    <Card sx={{ p: 2, margin: '0px 23px 0px 23px' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h6">
+          Test model
+        </Typography>
+        <Tooltip title="Reset form">
+          <IconButton 
+            onClick={resetForm}
             size="small"
-          />
-        ))}
+            sx={{ ml: 2 }}
+          >
+            <RefreshIcon />
+          </IconButton>
+        </Tooltip>
+      </Box>
+
+      <Box sx={{ mb: 1 }}>
+        {featureNames.map(feature => renderInputField(feature))}
       </Box>
 
       <Button 
         variant="contained" 
         onClick={handlePredict}
         disabled={isLoading || featureNames.some(f => !inputValues[f]?.trim())}
-        sx={{ mb: 2, minWidth: 150 }}
+        sx={{ minWidth: 150 }}
       >
         {isLoading ? (
           <>
@@ -178,8 +283,8 @@ export const ModelTester: React.FC<ModelTesterProps> = ({
       {error && (
         <Alert 
           severity="error" 
-          sx={{ mb: 2 }}
           onClose={() => setError(null)}
+          sx={{ mb: 2 }}
         >
           {error}
         </Alert>
@@ -189,3 +294,5 @@ export const ModelTester: React.FC<ModelTesterProps> = ({
     </Card>
   );
 };
+
+export default ModelTester;
