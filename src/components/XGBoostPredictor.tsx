@@ -47,6 +47,7 @@ export class XGBoostPredictor {
     private treeCache: Map<string, number>;
     private baseScore: number;
     private objective: string;
+    private isClassification: boolean;
   
     constructor(modelJson: string) {
       try {
@@ -57,10 +58,16 @@ export class XGBoostPredictor {
         }
   
         this.objective = this.model.learner.objective.name;
-        if (this.objective === 'multi:softmax' || this.objective === 'multi:softprob') {
+        
+        if (this.objective.startsWith('multi:')) {
           this.numClasses = parseInt(this.model.learner.objective.softmax_multiclass_param?.num_class || '2');
+          this.isClassification = true;
+        } else if (this.objective.startsWith('binary:')) {
+          this.numClasses = 2;
+          this.isClassification = true;
         } else {
           this.numClasses = 1;
+          this.isClassification = false;
         }
   
         const firstTree = this.model.learner.gradient_booster.model.trees[0];
@@ -140,7 +147,11 @@ export class XGBoostPredictor {
     predict(features: number[]): number {
       this.validateFeatures(features);
   
-      if (this.numClasses === 1) {
+      if (!this.isClassification) {
+        return this.predictRaw(features)[0];
+      }
+  
+      if (this.numClasses === 2) {
         const probs = this.predict_proba(features);
         return probs[1] >= 0.5 ? 1 : 0;
       } else {
@@ -153,7 +164,7 @@ export class XGBoostPredictor {
       const trees = this.model.learner.gradient_booster.model.trees;
       const treeInfo = this.model.learner.gradient_booster.model.tree_info;
       
-      if (this.numClasses === 1) {
+      if (this.numClasses === 1 || this.numClasses === 2) {
         let sum = this.baseScore;
         for (let i = 0; i < trees.length; i++) {
           sum += this.traverseTreeWithCache(i, trees[i], features);
@@ -170,11 +181,17 @@ export class XGBoostPredictor {
     }
   
     predict_proba(features: number[]): number[] {
+      if (!this.isClassification) {
+        throw new Error("predict_proba is only available for classification tasks");
+      }
+  
       this.validateFeatures(features);
       const margins = this.predictRaw(features);
       
-      if (this.numClasses === 1) {
-        const probability = this.sigmoid(margins[0]);
+      if (this.numClasses === 2) {
+        const probability = this.objective === 'binary:hinge' 
+          ? (margins[0] > 0 ? 1 : 0)
+          : this.sigmoid(margins[0]);
         return [1 - probability, probability];
       }
   
@@ -219,7 +236,8 @@ export class XGBoostPredictor {
         numTrees: this.model.learner.gradient_booster.model.trees.length,
         objective: this.objective,
         featureNames: this.model.learner.feature_names || [],
-        baseScore: this.baseScore
+        baseScore: this.baseScore,
+        isClassification: this.isClassification
       };
     }
   
