@@ -1,16 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Button, TextField, Card, Typography } from '@mui/material';
-import { mlApi } from '../services/api';
-
-interface TrainingResult {
-  status: string;
-  metrics: {
-    train_accuracy: number;
-    test_accuracy: number;
-  };
-  feature_importance: number[];
-  feature_names: string[];
-}
+import { mlApi, TrainingResult } from '../services/api';
 
 export const TrainingForm = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -43,6 +33,40 @@ export const TrainingForm = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const downloadModel = () => {
+    if (!result?.artifacts.model.data) return;
+    
+    const blob = new Blob(
+      [atob(result.artifacts.model.data)], 
+      { type: 'application/json' }
+    );
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'model.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadTypeScript = () => {
+    if (!result?.artifacts.typescript_code) return;
+    
+    const blob = new Blob(
+      [result.artifacts.typescript_code], 
+      { type: 'text/typescript' }
+    );
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'predictor.ts';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -83,6 +107,7 @@ export const TrainingForm = () => {
           <Typography>
             Test Accuracy: {(result.metrics.test_accuracy * 100).toFixed(2)}%
           </Typography>
+          
           <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
             Feature Importance
           </Typography>
@@ -91,6 +116,23 @@ export const TrainingForm = () => {
               {name}: {result.feature_importance[i].toFixed(4)}
             </Typography>
           ))}
+
+          <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+            <Button 
+              variant="contained" 
+              color="primary"
+              onClick={downloadModel}
+            >
+              Download Model
+            </Button>
+            <Button 
+              variant="contained" 
+              color="secondary"
+              onClick={downloadTypeScript}
+            >
+              Download TypeScript Code
+            </Button>
+          </Box>
         </Card>
       )}
     </Box>

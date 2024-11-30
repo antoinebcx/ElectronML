@@ -14,18 +14,25 @@ export interface TrainingResult {
   metrics: {
     train_accuracy: number;
     test_accuracy: number;
+    n_classes: number;
+    n_features: number;
   };
   feature_importance: number[];
   feature_names: string[];
+  artifacts: {
+    model: {
+      data: string;  // base64 encoded
+      format: string;
+    };
+    typescript_code: string;
+  };
 }
 
 const API_BASE_URL = 'http://localhost:8000';
 
 export const mlApi = {
   async trainModel(data: FormData, config: XGBoostConfig): Promise<TrainingResult> {
-    // Append config to FormData
     data.append('config', JSON.stringify(config));
-    
     const response = await axios.post(`${API_BASE_URL}/train`, data, {
       headers: {
         'Content-Type': 'multipart/form-data',
