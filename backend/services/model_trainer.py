@@ -17,7 +17,7 @@ class ModelTrainer:
         self.config = config
         self.model = None
         self.target_encoder = None
-        
+
     def _init_model(self, n_classes: Optional[int] = None) -> None:
         """Initialize XGBoost model based on task type"""
         model_params = self.config.parameters.dict()
@@ -66,15 +66,16 @@ class ModelTrainer:
             }
         }
 
-    def _calculate_classification_metrics(self, y_train: np.ndarray, y_test: np.ndarray,
+    def _calculate_classification_metrics(self, X_train: np.ndarray, X_test: np.ndarray,
+                                       y_train: np.ndarray, y_test: np.ndarray,
                                        y_pred_test: np.ndarray, n_features: int,
                                        target_mapping: Dict[int, str]) -> Dict[str, Any]:
         """Calculate metrics for classification tasks"""
         conf_matrix = confusion_matrix(y_test, y_pred_test)
         
         return {
-            'train_accuracy': float(self.model.score(self.model.X_train, y_train)),
-            'test_accuracy': float(self.model.score(self.model.X_test, y_test)),
+            'train_accuracy': float(self.model.score(X_train, y_train)),
+            'test_accuracy': float(self.model.score(X_test, y_test)),
             'n_classes': int(len(target_mapping) if target_mapping else 2),
             'n_features': int(n_features),
             'confusion_matrix': conf_matrix.tolist()
@@ -105,7 +106,8 @@ class ModelTrainer:
             else:
                 y_pred_test = self.model.predict(X_test)
                 metrics = self._calculate_classification_metrics(
-                    y_train_processed, y_test, y_pred_test, len(feature_names), target_mapping
+                    X_train, X_test, y_train_processed, y_test, y_pred_test, 
+                    len(feature_names), target_mapping
                 )
             
             # Calculate feature importance
