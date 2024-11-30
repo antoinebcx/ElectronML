@@ -237,20 +237,6 @@ const RegressionPlot: React.FC<RegressionPlotProps> = ({ actual, predicted }) =>
           </ScatterChart>
         </ResponsiveContainer>
       </Box>
-
-      {/* Legend explanation */}
-      <Box sx={{ 
-        mt: 2,
-        p: 2,
-        bgcolor: theme.palette.background.default,
-        borderRadius: 1,
-        border: `1px solid ${theme.palette.divider}`
-      }}>
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          The diagonal line represents perfect predictions. Points closer to this line indicate more accurate predictions. 
-          Points above the line indicate over-predictions, while points below indicate under-predictions.
-        </Typography>
-      </Box>
     </Card>
   );
 };
