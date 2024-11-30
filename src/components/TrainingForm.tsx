@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Box, Button, TextField, Card, Typography } from '@mui/material';
-import { mlApi, TrainingResult } from '../services/api';
+import { Box, Button, TextField, Card, Typography, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { mlApi, TrainingResult, TaskType } from '../services/api';
 
 interface TrainingFormProps {
   onTrainingComplete?: (result: TrainingResult) => void;
@@ -9,6 +9,7 @@ interface TrainingFormProps {
 export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [targetColumn, setTargetColumn] = useState('');
+  const [taskType, setTaskType] = useState<TaskType>('binary_classification');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TrainingResult | null>(null);
 
@@ -22,6 +23,7 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
 
     const config = {
       target_column: targetColumn,
+      task_type: taskType,
       parameters: {
         max_depth: 3,
         learning_rate: 0.1,
@@ -79,6 +81,7 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
       <form onSubmit={handleSubmit}>
         <Card sx={{ p: 2, mb: 2 }}>
           <Typography variant="h6" gutterBottom>Train Model</Typography>
+          
           <Box sx={{ mb: 2 }}>
             <input
               type="file"
@@ -86,6 +89,20 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
               onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
           </Box>
+
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel>Task Type</InputLabel>
+            <Select
+              value={taskType}
+              onChange={(e) => setTaskType(e.target.value as TaskType)}
+              label="Task Type"
+            >
+              <MenuItem value="binary_classification">Binary Classification</MenuItem>
+              <MenuItem value="multiclass_classification">Multiclass Classification</MenuItem>
+              <MenuItem value="regression">Regression</MenuItem>
+            </Select>
+          </FormControl>
+
           <TextField
             label="Target Column"
             value={targetColumn}
@@ -93,6 +110,7 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
             fullWidth
             sx={{ mb: 2 }}
           />
+
           <Button
             type="submit"
             variant="contained"
@@ -106,12 +124,26 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
       {result && (
         <Card sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom>Results</Typography>
-          <Typography>
-            Train Accuracy: {(result.metrics.train_accuracy * 100).toFixed(2)}%
-          </Typography>
-          <Typography>
-            Test Accuracy: {(result.metrics.test_accuracy * 100).toFixed(2)}%
-          </Typography>
+          
+          {taskType.includes('classification') ? (
+            <>
+              <Typography>
+                Train Accuracy: {(result.metrics.train_accuracy! * 100).toFixed(2)}%
+              </Typography>
+              <Typography>
+                Test Accuracy: {(result.metrics.test_accuracy! * 100).toFixed(2)}%
+              </Typography>
+            </>
+          ) : (
+            <>
+              <Typography>
+                Train RMSE: {result.metrics.train_rmse?.toFixed(4)}
+              </Typography>
+              <Typography>
+                Test RMSE: {result.metrics.test_rmse?.toFixed(4)}
+              </Typography>
+            </>
+          )}
           
           <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
             Feature Importance
