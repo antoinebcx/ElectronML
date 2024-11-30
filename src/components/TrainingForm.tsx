@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { Box, Button, TextField, Card, Typography } from '@mui/material';
 import { mlApi, TrainingResult } from '../services/api';
 
-export const TrainingForm = () => {
+interface TrainingFormProps {
+  onTrainingComplete?: (result: TrainingResult) => void;
+}
+
+export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [targetColumn, setTargetColumn] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,6 +32,7 @@ export const TrainingForm = () => {
     try {
       const result = await mlApi.trainModel(formData, config);
       setResult(result);
+      onTrainingComplete?.(result);
     } catch (error) {
       console.error('Training failed:', error);
     } finally {
