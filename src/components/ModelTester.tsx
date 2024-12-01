@@ -9,7 +9,6 @@ import {
   CircularProgress,
   Tooltip,
   IconButton,
-  Collapse,
   Paper,
   Table,
   TableBody,
@@ -18,7 +17,7 @@ import {
   TableHead,
   TableRow
 } from '@mui/material';
-import { Info as InfoIcon, Refresh as RefreshIcon } from '@mui/icons-material';
+import { Refresh as RefreshIcon } from '@mui/icons-material';
 import { XGBoostPredictor } from './XGBoostPredictor';
 import { DataPreprocessor } from './DataPreprocessor';
 
@@ -163,12 +162,12 @@ export const ModelTester: React.FC<ModelTesterProps> = ({
 
     return (
       <Card sx={{ mt: 3, p: 2 }}>
-        <Typography variant="h6" gutterBottom color="primary">
-          Prediction Results
+        <Typography variant="h6" gutterBottom>
+          Prediction results
         </Typography>
 
         <Typography variant="subtitle1" sx={{ mb: 2 }}>
-          {isRegression ? 'Predicted Value' : 'Predicted Class'}:{' '}
+          {isRegression ? 'Predicted value' : 'Predicted class'}:{' '}
           <Box component="span" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
             {typeof prediction.predictedValue === 'number' 
               ? prediction.predictedValue.toFixed(4)
@@ -179,7 +178,7 @@ export const ModelTester: React.FC<ModelTesterProps> = ({
         {!isRegression && prediction.probabilities && (
           <>
             <Typography variant="subtitle2" gutterBottom>
-              Class Probabilities:
+              Class probabilities:
             </Typography>
             <TableContainer component={Paper} sx={{ mb: 2 }}>
               <Table size="small">
@@ -205,42 +204,6 @@ export const ModelTester: React.FC<ModelTesterProps> = ({
             </TableContainer>
           </>
         )}
-
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <Typography variant="subtitle2">
-            Transformed Features
-          </Typography>
-          <IconButton 
-            size="small" 
-            onClick={() => setShowFeatures(!showFeatures)}
-            sx={{ ml: 1 }}
-          >
-            <InfoIcon fontSize="small" />
-          </IconButton>
-        </Box>
-
-        <Collapse in={showFeatures}>
-          <TableContainer component={Paper}>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Feature</TableCell>
-                  <TableCell align="right">Transformed Value</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {featureNames.map((feature, idx) => (
-                  <TableRow key={feature}>
-                    <TableCell>{feature}</TableCell>
-                    <TableCell align="right">
-                      {prediction.transformedFeatures[idx].toFixed(4)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Collapse>
       </Card>
     );
   };
@@ -277,7 +240,7 @@ export const ModelTester: React.FC<ModelTesterProps> = ({
             <CircularProgress size={20} sx={{ mr: 1 }} />
             Processing...
           </>
-        ) : 'Make Prediction'}
+        ) : 'Predict'}
       </Button>
 
       {error && (
