@@ -234,6 +234,7 @@ export const ModelTester: React.FC<ModelTesterProps> = ({
         onClick={handlePredict}
         disabled={isLoading || featureNames.some(f => !inputValues[f]?.trim())}
         sx={{ minWidth: 150 }}
+        fullWidth
       >
         {isLoading ? (
           <>
