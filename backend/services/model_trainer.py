@@ -71,11 +71,23 @@ class ModelTrainer:
                                        y_pred_test: np.ndarray, n_features: int,
                                        target_mapping: Dict[int, str]) -> Dict[str, Any]:
         """Calculate metrics for classification tasks"""
+        from sklearn.metrics import roc_auc_score, confusion_matrix
+        
         conf_matrix = confusion_matrix(y_test, y_pred_test)
+        
+        # Get probabilities for AUC calculation
+        if self.config.task_type == 'binary_classification':
+            y_pred_proba = self.model.predict_proba(X_test)[:, 1]
+            auc_score = float(roc_auc_score(y_test, y_pred_proba))
+        else:
+            y_pred_proba = self.model.predict_proba(X_test)
+            # Use macro average for multiclass
+            auc_score = float(roc_auc_score(y_test, y_pred_proba, multi_class='ovr'))
         
         return {
             'train_accuracy': float(self.model.score(X_train, y_train)),
             'test_accuracy': float(self.model.score(X_test, y_test)),
+            'auc_score': auc_score,
             'n_classes': int(len(target_mapping) if target_mapping else 2),
             'n_features': int(n_features),
             'confusion_matrix': conf_matrix.tolist()
