@@ -1,32 +1,74 @@
 {
     "name": "electron-ml",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "main": "dist/electron/main.js",
     "scripts": {
-        "start": "concurrently \"npm run start:react\" \"npm run start:electron\" \"npm run start:backend\"",
-        "start:react": "vite",
-        "start:electron": "tsc -p electron && electron .",
-        "start:backend": "cd backend && uvicorn main:app --reload",
-        "build": "tsc && vite build"
+      "start": "concurrently \"npm run start:react\" \"npm run start:electron\" \"npm run start:backend\"",
+      "start:react": "vite",
+      "start:electron": "tsc -p electron && electron .",
+      "start:backend": "cd backend && uvicorn main:app --reload",
+      "build": "npm run build:react && npm run build:electron && npm run build:python",
+      "build:react": "vite build",
+      "build:electron": "tsc -p electron",
+      "build:python": "node scripts/build-python.js",
+      "package": "electron-builder build",
+      "package:mac": "electron-builder build --mac",
+      "package:win": "electron-builder build --win",
+      "package:linux": "electron-builder build --linux",
+      "package:all": "electron-builder build -mwl"
     },
     "dependencies": {
-        "@emotion/react": "^11.13.5",
-        "@emotion/styled": "^11.13.5",
-        "@mui/icons-material": "^5.16.8",
-        "@mui/material": "^5.16.8",
-        "axios": "^1.7.8",
-        "electron": "^25.0.0",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0",
-        "react-dropzone": "^14.3.5",
-        "recharts": "^2.13.3"
+      "@emotion/react": "^11.13.5",
+      "@emotion/styled": "^11.13.5",
+      "@mui/icons-material": "^5.16.8",
+      "@mui/material": "^5.16.8",
+      "axios": "^1.7.8",
+      "react": "^18.2.0",
+      "react-dom": "^18.2.0",
+      "react-dropzone": "^14.3.5",
+      "recharts": "^2.13.3"
     },
     "devDependencies": {
-        "@types/react": "^18.2.0",
-        "@types/react-dom": "^18.2.0",
-        "@vitejs/plugin-react": "^4.0.0",
-        "concurrently": "^8.0.1",
-        "typescript": "^5.0.4",
-        "vite": "^4.3.9"
+      "@types/react": "^18.2.0",
+      "@types/react-dom": "^18.2.0",
+      "@vitejs/plugin-react": "^4.0.0",
+      "concurrently": "^8.0.1",
+      "typescript": "^5.0.4",
+      "vite": "^4.3.9",
+      "electron": "^25.0.0",
+      "electron-builder": "^24.0.0"
+    },
+    "build": {
+      "appId": "com.electron-ml.app",
+      "productName": "ElectronML",
+      "files": [
+        "dist/**/*",
+        "backend-dist/**/*"
+      ],
+      "directories": {
+        "output": "releases",
+        "buildResources": "assets"
+      },
+      "extraResources": [
+        {
+          "from": "backend-dist",
+          "to": "backend-dist"
+        }
+      ],
+      "mac": {
+        "category": "public.app-category.developer-tools",
+        "target": {
+          "target": "default",
+          "arch": ["x64", "arm64"]
+        },
+        "hardenedRuntime": true,
+        "gatekeeperAssess": false
+      },
+      "win": {
+        "target": "nsis"
+      },
+      "linux": {
+        "target": "AppImage"
+      }
     }
 }
