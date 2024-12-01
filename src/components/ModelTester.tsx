@@ -161,7 +161,7 @@ export const ModelTester: React.FC<ModelTesterProps> = ({
     if (!prediction) return null;
 
     return (
-      <Card sx={{ mt: 3, p: 2 }}>
+      <Card sx={{ mt: 3, p: 2 }} elevation={0}>
         <Typography variant="h6" gutterBottom>
           Prediction results
         </Typography>
@@ -209,7 +209,7 @@ export const ModelTester: React.FC<ModelTesterProps> = ({
   };
 
   return (
-    <Card sx={{ p: 3, margin: '0px 23px 0px 23px' }}>
+    <Card sx={{ p: 3, margin: '0px 23px 0px 23px' }} elevation={0}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <Typography variant="h6">
           Test model

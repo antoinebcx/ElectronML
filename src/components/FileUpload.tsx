@@ -47,6 +47,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileChange, currentFil
             : 'rgba(0, 0, 0, 0.02)'
         }
       }}
+      elevation={0}
     >
       <input {...getInputProps()} />
       

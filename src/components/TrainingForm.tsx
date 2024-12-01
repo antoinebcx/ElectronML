@@ -98,8 +98,8 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
   return (
     <Box sx={{ p: 3 }}>
       <form onSubmit={handleSubmit}>
-        <Card sx={{ p: 3, mb: 2 }}>
-          <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>Train model</Typography>
+        <Card sx={{ p: 3, mb: 3 }} elevation={0}>
+          <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>Train a model</Typography>
           
           <Box sx={{ mb: 3 }}>
             <FileUpload
@@ -197,7 +197,7 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
       </form>
           
       {result && (
-        <Card sx={{ p: 3 }}>
+        <Card sx={{ p: 3 }} elevation={0}>
           <Typography variant="h6" gutterBottom>Results</Typography>
           
           {taskType.includes('classification') ? (
