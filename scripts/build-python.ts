@@ -1,14 +1,14 @@
-const { exec } = require('child_process');
-const path = require('path');
-const os = require('os');
-const fs = require('fs');
+import { exec } from 'child_process';
+import path from 'path';
+import os from 'os';
+import fs from 'fs';
 
-async function detectArchitecture() {
+async function detectArchitecture(): Promise<string> {
+  if (os.platform() !== 'darwin') {
+    return 'other';
+  }
+  
   return new Promise((resolve, reject) => {
-    if (os.platform() !== 'darwin') {
-      return resolve('other');
-    }
-    
     exec('uname -m', (error, stdout) => {
       if (error) {
         reject(error);
@@ -19,7 +19,7 @@ async function detectArchitecture() {
   });
 }
 
-async function buildPythonBackend() {
+async function buildPythonBackend(): Promise<void> {
   try {
     const arch = await detectArchitecture();
     const isMac = os.platform() === 'darwin';
@@ -27,7 +27,7 @@ async function buildPythonBackend() {
     
     // configure Python command based on architecture
     const pythonCommand = isMac && arch === 'arm64' ? 'arch -arm64 python3' : 'python3';
-
+    
     // ensure backend-dist directory exists
     const distPath = path.join(__dirname, '../backend-dist');
     if (!fs.existsSync(distPath)) {
@@ -36,7 +36,7 @@ async function buildPythonBackend() {
 
     const activateCommand = isWindows ? '.\\venv\\Scripts\\activate' : 'source venv/bin/activate';
     const removeVenvCommand = isWindows ? 'if exist venv rmdir /s /q venv' : 'rm -rf venv';
-
+    
     const commands = [
       removeVenvCommand,
       `${pythonCommand} -m venv venv`,
