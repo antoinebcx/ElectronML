@@ -82,13 +82,23 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
     }
   };
 
-  const downloadModel = () => {
-    if (!result?.artifacts.model.data) return;
-    const blob = new Blob([atob(result.artifacts.model.data)], { type: 'application/json' });
+  const downloadInferencePackage = () => {
+    if (!result?.artifacts.model.data || !result?.artifacts.preprocessing_metadata) return;
+    
+    const inferencePackage = {
+      model: JSON.parse(atob(result.artifacts.model.data)),
+      preprocessing_metadata: JSON.parse(result.artifacts.preprocessing_metadata),
+      feature_names: result.feature_names,
+      class_mapping: result.class_mapping,
+      isRegression: !result.metrics.train_accuracy
+    };
+  
+    const blob = new Blob([JSON.stringify(inferencePackage, null, 2)], 
+      { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'model.json';
+    a.download = 'inference_package.json';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -287,9 +297,10 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
           <Box sx={{ mt: 3 }}>
             <Button 
               variant="contained" 
-              onClick={downloadModel}
+              onClick={downloadInferencePackage}
+              fullWidth
             >
-              Download model
+              Download inference package
             </Button>
           </Box>
         </Card>
