@@ -16,9 +16,14 @@ import {
 interface RegressionPlotProps {
   actual: number[];
   predicted: number[];
+  maxPoints?: number;  // Maximum number of points to display
 }
 
-const RegressionPlot: React.FC<RegressionPlotProps> = ({ actual, predicted }) => {
+const RegressionPlot: React.FC<RegressionPlotProps> = ({ 
+  actual, 
+  predicted, 
+  maxPoints = 1000  // Default max points
+}) => {
   const theme = useTheme();
 
   // Memoize data processing
@@ -28,13 +33,21 @@ const RegressionPlot: React.FC<RegressionPlotProps> = ({ actual, predicted }) =>
     max,
     r2,
     rmse,
-    meanAbsError
+    meanAbsError,
+    totalPoints,
+    displayedPoints
   } = useMemo(() => {
-    // Create data points and calculate ranges
-    const combinedData = actual.map((act, index) => ({
+    // First, create combined data
+    let combinedData = actual.map((act, index) => ({
       actual: act,
       predicted: predicted[index],
     }));
+
+    // Sample data if too large
+    if (combinedData.length > maxPoints) {
+      const samplingRate = Math.floor(combinedData.length / maxPoints);
+      combinedData = combinedData.filter((_, index) => index % samplingRate === 0);
+    }
 
     const allValues = [...actual, ...predicted];
     const minVal = Math.floor(Math.min(...allValues));
@@ -44,18 +57,16 @@ const RegressionPlot: React.FC<RegressionPlotProps> = ({ actual, predicted }) =>
     const range = maxVal - minVal;
     const padding = range * 0.05;
     
-    // Calculate R² (R-squared)
+    // Calculate metrics using full dataset (not sampled)
     const actualMean = actual.reduce((sum, val) => sum + val, 0) / actual.length;
     const totalSS = actual.reduce((sum, val) => sum + Math.pow(val - actualMean, 2), 0);
     const residualSS = actual.reduce((sum, val, i) => sum + Math.pow(val - predicted[i], 2), 0);
     const r2Score = 1 - (residualSS / totalSS);
 
-    // Calculate RMSE
     const rmseScore = Math.sqrt(
       actual.reduce((sum, val, i) => sum + Math.pow(val - predicted[i], 2), 0) / actual.length
     );
 
-    // Calculate Mean Absolute Error
     const mae = actual.reduce((sum, val, i) => sum + Math.abs(val - predicted[i]), 0) / actual.length;
 
     return {
@@ -64,9 +75,11 @@ const RegressionPlot: React.FC<RegressionPlotProps> = ({ actual, predicted }) =>
       max: maxVal + padding,
       r2: r2Score,
       rmse: rmseScore,
-      meanAbsError: mae
+      meanAbsError: mae,
+      totalPoints: actual.length,
+      displayedPoints: combinedData.length
     };
-  }, [actual, predicted]);
+  }, [actual, predicted, maxPoints]);
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -82,13 +95,6 @@ const RegressionPlot: React.FC<RegressionPlotProps> = ({ actual, predicted }) =>
           p: 1.5,
           boxShadow: theme.shadows[3]
         }}>
-          <Typography variant="caption" sx={{ 
-            color: theme.palette.text.secondary,
-            display: 'block',
-            mb: 1
-          }}>
-            Point Details:
-          </Typography>
           <Box sx={{ 
             display: 'grid', 
             gridTemplateColumns: 'auto 1fr',
@@ -118,7 +124,7 @@ const RegressionPlot: React.FC<RegressionPlotProps> = ({ actual, predicted }) =>
   };
 
   return (
-    <Card sx={{
+    <Card elevation={0} sx={{
       p: 3,
       bgcolor: 'background.paper',
       mt: 3,
@@ -216,7 +222,7 @@ const RegressionPlot: React.FC<RegressionPlotProps> = ({ actual, predicted }) =>
               )}
             />
             
-            {/* Perfect prediction line (diagonal) */}
+            {/* Perfect prediction line */}
             <ReferenceLine
               segment={[
                 { x: min, y: min },
@@ -237,6 +243,12 @@ const RegressionPlot: React.FC<RegressionPlotProps> = ({ actual, predicted }) =>
           </ScatterChart>
         </ResponsiveContainer>
       </Box>
+      {/* Dataset info */}
+      {totalPoints > displayedPoints && (
+        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 2, ml: 2 }}>
+          Showing {displayedPoints.toLocaleString()} points out of {totalPoints.toLocaleString()} in total
+        </Typography>
+      )}
     </Card>
   );
 };
