@@ -40,7 +40,7 @@
     },
     "build": {
       "appId": "com.electron-ml.app",
-      "productName": "Electron ML",
+      "productName": "ElectronML",
       "files": [
         "dist/**/*",
         "backend-dist/**/*"
