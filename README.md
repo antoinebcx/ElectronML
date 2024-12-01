@@ -28,7 +28,7 @@ Download the app from the [Releases](https://github.com/antoinebcx/ElectronML/re
 - Windows: `Electron ML Setup 1.0.1.exe`
 - Linux: `Electron ML-1.0.1.AppImage`
 
-Then,
+Then, to install it:
 - Mac: Double-click the .dmg file and drag the app to Applications
 - Windows: Run the setup executable
 - Linux: Make the AppImage executable (`chmod +x`) and run it
