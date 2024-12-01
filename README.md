@@ -20,14 +20,34 @@ You can download the resulting JSON inference package and use it directly in you
 
 No need to rely on an external Python service anymore to use XGBoost in TypeScript/JavaScript environments!
 
-## Usage
+## Download & Installation
+
+Download the app from the [Releases](https://github.com/antoinebcx/ElectronML/releases/tag/v1.0.1) page:
+- Apple Silicon (M1/M2) Macs: `Electron ML-1.0.1-arm64.dmg`
+- Intel Macs: `Electron ML-1.0.1.dmg`
+- Windows: `Electron ML Setup 1.0.1.exe`
+- Linux: `Electron ML-1.0.1.AppImage`
+
+Then,
+- Mac: Double-click the .dmg file and drag the app to Applications
+- Windows: Run the setup executable
+- Linux: Make the AppImage executable (`chmod +x`) and run it
+
+## Development
 
 ### Prerequesites
 You need **Python 3** and **Node.js**.
 
-### Setup and launch Python server
-Run the following commands at /backend folder level:
+### Setup and Launch
+1. Clone the repository
+```bash
+git clone https://github.com/antoinebcx/ElectronML.git
+cd ElectronML
+```
+
+2. Setup and launch Python server
 ```shell
+cd backend
 rm -rf venv
 python3 -m venv venv
 source venv/bin/activate
@@ -35,9 +55,17 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-### Setup and launch Electron app
-Run the following commands at the root folder level:
+3. Setup and launch Electron app
 ```shell
+cd ..      # Back to root directory
 npm install
 npm start
+```
+
+### Building from source
+```shell
+npm run build      # Build the application
+npm run package:mac    # Package for macOS
+npm run package:win    # Package for Windows
+npm run package:linux  # Package for Linux
 ```
