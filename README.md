@@ -23,7 +23,6 @@ No need to rely on an external Python service anymore to use XGBoost in TypeScri
 ## Download & Installation
 
 Download the app from the [Releases](https://github.com/antoinebcx/ElectronML/releases/tag/v1.0.1) page:
-- Apple Silicon (M1/M2) Macs: `Electron ML-1.0.1-arm64.dmg`
 - Intel Macs: `Electron ML-1.0.1.dmg`
 - Windows: `Electron ML Setup 1.0.1.exe`
 - Linux: `Electron ML-1.0.1.AppImage`
