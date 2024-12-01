@@ -1,6 +1,6 @@
 {
     "name": "electron-ml",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "main": "dist/electron/main.js",
     "scripts": {
         "start": "concurrently \"npm run start:react\" \"npm run start:electron\" \"npm run start:backend\"",
