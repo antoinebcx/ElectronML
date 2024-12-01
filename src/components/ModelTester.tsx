@@ -180,7 +180,7 @@ export const ModelTester: React.FC<ModelTesterProps> = ({
             <Typography variant="subtitle2" gutterBottom>
               Class probabilities:
             </Typography>
-            <TableContainer component={Paper} sx={{ mb: 2 }}>
+            <TableContainer component={Paper} sx={{ mb: 2 }} elevation={0}>
               <Table size="small">
                 <TableHead>
                   <TableRow>

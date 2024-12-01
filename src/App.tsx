@@ -43,7 +43,7 @@ export default function App() {
         
         <Box sx={{ 
           flex: 1,
-          py: 4,
+          py: 2,
           px: { xs: 2, sm: 3 }
         }}>
           <Box sx={{
