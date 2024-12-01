@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Card, Typography, Paper, Tooltip } from '@mui/material';
+import { Box, Card, Typography, Paper, Tooltip, useTheme } from '@mui/material';
 
 interface ConfusionMatrixProps {
   matrix: number[][];
@@ -7,13 +7,27 @@ interface ConfusionMatrixProps {
 }
 
 const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ matrix, classMapping }) => {
+  const theme = useTheme();
   const maxValue = Math.max(...matrix.flat());
   const totalSamples = matrix.flat().reduce((a, b) => a + b, 0);
   const isBinary = matrix.length === 2;
   
   const getBackgroundColor = (value: number) => {
-    const intensity = Math.floor((value / maxValue) * 255);
-    return `rgb(10, 10, ${Math.min(255, intensity + 50)})`;
+    const intensity = value / maxValue;
+    if (theme.palette.mode === 'dark') {
+      return `rgba(99, 102, 241, ${intensity * 0.9})`;
+    } else {
+      return `rgba(99, 102, 241, ${intensity * 0.15})`;
+    }
+  };
+
+  const getTextColor = (value: number) => {
+    const intensity = value / maxValue;
+    if (theme.palette.mode === 'dark') {
+      return intensity > 0.3 ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.7)';
+    } else {
+      return theme.palette.text.primary;
+    }
   };
 
   const classLabels = classMapping 
@@ -33,28 +47,29 @@ const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ matrix, classMapping 
   };
 
   return (
-    <Card sx={{ p: 3, bgcolor: 'background.paper', mt: 3 }}>
-      {/* Main container with constrained width */}
-      <Box sx={{ 
-        maxWidth: '100%',
-        overflowX: 'auto',
-      }}>
-        {/* Title */}
+    <Card 
+      sx={{ 
+        p: 3, 
+        bgcolor: 'background.paper',
+        mt: 3,
+        border: `1px solid ${theme.palette.divider}`,
+      }} 
+      elevation={0}
+    >
+      <Box sx={{ maxWidth: '100%', overflowX: 'auto' }}>
         <Typography variant="h6" sx={{ mb: 4, color: 'text.primary' }}>
           Confusion Matrix
         </Typography>
 
-        {/* Matrix container with fixed proportions */}
         <Box sx={{ 
           display: 'inline-flex',
           flexDirection: 'column',
           minWidth: 'min-content',
         }}>
-          {/* Predicted Class Label */}
           <Box sx={{ 
             display: 'flex',
             justifyContent: 'center',
-            ml: '64px', // Compensate for the vertical label space
+            ml: '64px',
             mb: 2,
           }}>
             <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
@@ -62,9 +77,7 @@ const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ matrix, classMapping 
             </Typography>
           </Box>
 
-          {/* Matrix content */}
           <Box sx={{ display: 'flex' }}>
-            {/* Actual Class Label (Vertical) */}
             <Box sx={{ 
               display: 'flex',
               alignItems: 'center',
@@ -82,12 +95,10 @@ const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ matrix, classMapping 
               </Typography>
             </Box>
 
-            {/* Matrix with labels */}
             <Box>
-              {/* Top labels */}
               <Box sx={{ 
                 display: 'flex',
-                ml: '64px', // Width of the row labels
+                ml: '64px',
                 mb: 1,
               }}>
                 {classLabels.map((label, idx) => (
@@ -101,7 +112,7 @@ const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ matrix, classMapping 
                     <Typography 
                       variant="body2" 
                       sx={{ 
-                        color: 'text.primary',
+                        color: 'text.secondary',
                         transform: 'rotate(-20deg)',
                         transformOrigin: 'bottom left',
                         width: 'min-content',
@@ -116,7 +127,6 @@ const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ matrix, classMapping 
                 ))}
               </Box>
 
-              {/* Matrix rows */}
               {matrix.map((row, i) => (
                 <Box 
                   key={`row-${i}`} 
@@ -126,23 +136,22 @@ const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ matrix, classMapping 
                     height: 64,
                   }}
                 >
-                  {/* Row label */}
                   <Box sx={{ 
                     width: 64,
                     pr: 2,
                     textAlign: 'right',
                   }}>
-                    <Typography variant="body2" sx={{ color: 'text.primary' }}>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                       {classLabels[i]}
                     </Typography>
                   </Box>
 
-                  {/* Matrix cells */}
                   {row.map((value, j) => (
                     <Tooltip
                       key={`cell-${i}-${j}`}
                       title={getCellLabel(i, j, value)}
                       arrow
+                      placement="top"
                     >
                       <Paper
                         sx={{
@@ -153,21 +162,34 @@ const ConfusionMatrix: React.FC<ConfusionMatrixProps> = ({ matrix, classMapping 
                           alignItems: 'center',
                           justifyContent: 'center',
                           bgcolor: getBackgroundColor(value),
-                          color: value/maxValue > 0.3 ? 'white' : 'text.primary',
-                          border: '1px solid rgba(255,255,255,0.12)',
+                          color: getTextColor(value),
+                          border: `1px solid ${theme.palette.divider}`,
                           cursor: 'pointer',
                           transition: 'all 0.2s',
                           '&:hover': {
                             transform: 'scale(1.05)',
                             zIndex: 1,
+                            boxShadow: theme.shadows[3]
                           }
                         }}
                         elevation={0}
                       >
-                        <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                        <Typography 
+                          variant="body1" 
+                          sx={{ 
+                            fontWeight: 'bold',
+                            color: 'inherit'
+                          }}
+                        >
                           {value}
                         </Typography>
-                        <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            opacity: 0.8,
+                            color: 'inherit'
+                          }}
+                        >
                           {((value / totalSamples) * 100).toFixed(1)}%
                         </Typography>
                       </Paper>

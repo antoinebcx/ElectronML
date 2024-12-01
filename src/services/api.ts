@@ -22,6 +22,7 @@ export interface TrainingResult {
     n_classes?: number;
     n_features: number;
     confusion_matrix?: number[][];
+    auc_score?: number;
     test_predictions?: {
       actual: number[];
       predicted: number[];

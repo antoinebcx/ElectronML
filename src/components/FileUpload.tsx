@@ -47,6 +47,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileChange, currentFil
             : 'rgba(0, 0, 0, 0.02)'
         }
       }}
+      elevation={0}
     >
       <input {...getInputProps()} />
       
@@ -89,9 +90,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileChange, currentFil
           <>
             <AttachFile 
               sx={{ 
-                fontSize: 35,
+                fontSize: 30,
                 color: isDragActive ? 'primary.main' : 'text.secondary',
-                mb: 1
+                mb: 0.5
               }} 
             />
             <Typography variant="body1" color="text.secondary" align="center">
