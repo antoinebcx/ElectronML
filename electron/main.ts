@@ -40,12 +40,10 @@ function createWindow() {
       contextIsolation: false
     }
   });
-
   const isDev = !app.isPackaged;
   if (isDev) {
     win.loadURL('http://localhost:5173');
-    // Optional: Open DevTools
-    // win.webContents.openDevTools();
+    win.webContents.openDevTools();
   } else {
     win.loadFile(path.join(__dirname, '..', '..', 'dist', 'index.html'));
   }

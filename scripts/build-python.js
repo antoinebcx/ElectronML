@@ -25,10 +25,10 @@ async function buildPythonBackend() {
     const isMac = os.platform() === 'darwin';
     const isWindows = os.platform() === 'win32';
     
-    // Configure Python command based on architecture
+    // configure Python command based on architecture
     const pythonCommand = isMac && arch === 'arm64' ? 'arch -arm64 python3' : 'python3';
 
-    // Ensure backend-dist directory exists
+    // ensure backend-dist directory exists
     const distPath = path.join(__dirname, '../backend-dist');
     if (!fs.existsSync(distPath)) {
       fs.mkdirSync(distPath);
@@ -44,7 +44,7 @@ async function buildPythonBackend() {
       'pip install --upgrade pip',
       'pip install -r requirements.txt',
       'pip install pyinstaller',
-      `pyinstaller --noconsole --onefile --distpath ../backend-dist --name backend${isWindows ? '.exe' : ''} --collect-all pydantic main.py`
+      `pyinstaller --noconsole --onefile --distpath ../backend-dist --name backend${isWindows ? '.exe' : ''} --collect-all pydantic --collect-all xgboost --hidden-import="xgboost" main.py`
     ];
 
     const command = commands.join(isWindows ? ' && ' : ' && ');
