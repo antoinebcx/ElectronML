@@ -35,7 +35,6 @@ export default function App() {
             mx: 'auto',
             display: 'flex',
             flexDirection: 'column',
-            gap: 3
           }}
         >
           <TrainingForm

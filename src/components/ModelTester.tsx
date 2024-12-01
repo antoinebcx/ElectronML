@@ -246,7 +246,7 @@ export const ModelTester: React.FC<ModelTesterProps> = ({
   };
 
   return (
-    <Card sx={{ p: 2, margin: '0px 23px 0px 23px' }}>
+    <Card sx={{ p: 3, margin: '0px 23px 0px 23px' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <Typography variant="h6">
           Test model

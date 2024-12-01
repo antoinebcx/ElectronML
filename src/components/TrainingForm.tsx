@@ -75,7 +75,7 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
   return (
     <Box sx={{ p: 3 }}>
       <form onSubmit={handleSubmit}>
-        <Card sx={{ p: 2, mb: 2 }}>
+        <Card sx={{ p: 3, mb: 2 }}>
           <Typography variant="h6" gutterBottom>Train model</Typography>
           
           <Box sx={{ mb: 2 }}>
@@ -117,7 +117,7 @@ export const TrainingForm = ({ onTrainingComplete }: TrainingFormProps) => {
       </form>
           
       {result && (
-        <Card sx={{ p: 2 }}>
+        <Card sx={{ p: 3, mt: 3 }}>
           <Typography variant="h6" gutterBottom>Results</Typography>
           
           {taskType.includes('classification') ? (
