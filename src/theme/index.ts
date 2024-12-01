@@ -5,8 +5,8 @@ const getThemeOptions = (mode: 'light' | 'dark'): ThemeOptions => ({
     mode,
     primary: {
       main: '#6366f1',
-      light: '#818cf8',
-      dark: '#4f46e5',
+      light: '#6366f1',
+      dark: '#6366f1',
     },
     secondary: {
       main: '#14b8a6',
